@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Biblioteca Digital</title>
+  <!-- Tailwind CSS para diseño moderno y limpio -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- pdf-lib para estampar la marca de agua al descargar -->
+  <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+  <!-- Fuente Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .book-card:hover .book-cover { transform: translateY(-4px); }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col">
+
+  <!-- HEADER (Estilo Opción 2) -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+      <!-- Logo / Título -->
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 bg-slate-900 text-white rounded-lg flex items-center justify-center font-bold text-lg">
+          B
+        </div>
+        <span class="font-bold text-lg tracking-tight text-slate-900 uppercase">Biblioteca Digital</span>
+      </div>
+
+      <!-- Buscador -->
+      <div class="relative w-full max-w-md">
+        <input 
+          type="text" 
+          id="searchInput" 
+          placeholder="Buscar libro por título..." 
+          class="w-full bg-slate-100 border border-slate-200 text-sm rounded-lg pl-4 pr-10 py-2 focus:outline-none focus:bg-white focus:border-blue-600 transition"
+        />
+        <svg class="w-4 h-4 text-slate-400 absolute right-3.5 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Sub-navegación -->
+    <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex gap-6 text-sm font-medium text-slate-600 overflow-x-auto">
+      <button onclick="filtrarLibros('todos')" class="py-2.5 border-b-2 border-blue-600 text-blue-600 whitespace-nowrap">Inicio</button>
+      <button onclick="filtrarLibros('recientes')" class="py-2.5 border-b-2 border-transparent hover:text-slate-900 whitespace-nowrap">Novedades</button>
+      <button onclick="filtrarLibros('populares')" class="py-2.5 border-b-2 border-transparent hover:text-slate-900 whitespace-nowrap">Más Leídos</button>
+    </nav>
+  </header>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full">
+    <div class="flex flex-col lg:flex-row gap-8">
+      
+      <!-- COLUMNA IZQUIERDA: Cuadrícula de Libros -->
+      <div class="flex-1">
+        <div class="flex items-center justify-between mb-6">
+          <h1 class="text-xl font-bold text-slate-900">Explora Nuestra Colección</h1>
+          <span id="bookCount" class="text-xs font-medium bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full">Cargando...</span>
+        </div>
+
+        <!-- Estado de carga / Error -->
+        <div id="statusMessage" class="text-center py-12 text-slate-500 text-sm">
+          Conectando con el repositorio de GitHub...
+        </div>
+
+        <!-- Grid de Libros -->
+        <div id="booksGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
+          <!-- Aquí se insertan los libros automáticamente -->
+        </div>
+      </div>
+
+      <!-- COLUMNA DERECHA: Sidebar (Estilo Opción 2) -->
+      <aside class="w-full lg:w-64 shrink-0 space-y-8 border-t lg:border-t-0 lg:border-l border-slate-200 pt-6 lg:pt-0 lg:pl-8">
+        
+        <!-- Categorías / Carpetas -->
+        <div>
+          <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wider mb-3">Categorías Populares</h2>
+          <ul class="space-y-2 text-sm text-slate-600">
+            <li><button onclick="filtrarLibros('todos')" class="hover:text-blue-600 transition text-left w-full">Todos los libros</button></li>
+            <li><button onclick="filtrarLibros('pdf')" class="hover:text-blue-600 transition text-left w-full">Documentos PDF</button></li>
+            <li><button onclick="filtrarLibros('lectura')" class="hover:text-blue-600 transition text-left w-full">Lectura Rápida</button></li>
+          </ul>
+        </div>
+
+        <!-- Más Leídos -->
+        <div>
+          <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wider mb-3">Destacados</h2>
+          <div id="featuredList" class="space-y-3 text-sm text-slate-600">
+            <p class="text-xs text-slate-400">Se actualizará al cargar los libros.</p>
+          </div>
+        </div>
+
+        <!-- Info de Autoría -->
+        <div class="bg-slate-900 text-white p-4 rounded-xl">
+          <p class="text-xs uppercase tracking-wider text-blue-400 font-semibold mb-1">Archivo Oficial</p>
+          <p class="text-sm font-medium">Biblioteca Digital</p>
+          <p class="text-xs text-slate-400 mt-2">Todos los ejemplares descargados incluyen sello de agua oficial.</p>
+        </div>
+
+      </aside>
+    </div>
+  </main>
+
+  <!-- MODAL LECTOR DE LIBROS -->
+  <div id="readerModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex-col">
+    <!-- Barra superior del lector -->
+    <div class="bg-slate-900 text-white px-4 py-3 flex items-center justify-between border-b border-slate-800">
+      <div class="flex items-center gap-3 truncate">
+        <button onclick="cerrarLector()" class="p-1.5 hover:bg-slate-800 rounded-lg transition" title="Cerrar">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+        <h3 id="modalTitle" class="font-semibold text-sm sm:text-base truncate">Título del Libro</h3>
+      </div>
+
+      <div class="flex items-center gap-2 shrink-0">
+        <!-- Botón de descarga con marca de agua -->
+        <button 
+          id="downloadBtn"
+          onclick="descargarConMarcaDeAgua()" 
+          class="bg-blue-600 hover:bg-blue-500 text-white text-xs sm:text-sm font-medium px-3.5 py-2 rounded-lg flex items-center gap-2 transition shadow-sm"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+          </svg>
+          <span id="downloadBtnText">Guardar PDF</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Visor PDF / Contenido -->
+    <div class="flex-1 bg-slate-800 relative flex items-center justify-center overflow-hidden">
+      <iframe id="pdfFrame" class="w-full h-full border-0 hidden" src=""></iframe>
+      <div id="textViewer" class="w-full max-w-3xl h-full bg-white text-slate-800 p-8 overflow-y-auto hidden leading-relaxed whitespace-pre-wrap font-serif text-lg"></div>
+    </div>
+  </div>
+
+  <script>
+    // ==========================================
+    // 1. CONFIGURA AQUÍ TU REPOSITORIO DE GITHUB
+    // ==========================================
+    const GITHUB_USER = "TU_USUARIO_DE_GITHUB"; // Ejemplo: "andersondev"
+    const GITHUB_REPO = "TU_REPOSITORIO";       // Ejemplo: "mi-biblioteca"
+    const CARPETA_LIBROS = "libros";            // Nombre de la carpeta en tu repo
+    const MARCA_DE_AGUA = "Anderson autor";     // Texto de la marca de agua
+
+    // Variables globales
+    let listaLibros = [];
+    let libroActual = null;
+
+    // Al cargar la página, consultamos la API de GitHub
+    document.addEventListener("DOMContentLoaded", () => {
+      cargarLibrosDesdeGitHub();
+
+      // Buscador en tiempo real
+      document.getElementById("searchInput").addEventListener("input", (e) => {
+        const texto = e.target.value.toLowerCase();
+        const filtrados = listaLibros.filter(b => b.titulo.toLowerCase().includes(texto));
+        renderizarLibros(filtrados);
+      });
+    });
+
+    async function cargarLibrosDesdeGitHub() {
+      const statusEl = document.getElementById("statusMessage");
+      const apiUrl = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${CARPETA_LIBROS}`;
+
+      try {
+        const res = await fetch(apiUrl);
+        if (!res.ok) throw new Error("No se pudo conectar con el repositorio. Revisa el usuario, el repo y que sea público.");
+        
+        const items = await res.json();
+        const promesasLibros = [];
+
+        for (const item of items) {
+          // Caso A: Subcarpeta por cada libro (contiene miniatura.jpg/png y archivo.pdf)
+          if (item.type === "dir") {
+            promesasLibros.push(procesarCarpetaLibro(item));
+          } 
+          // Caso B: Archivos sueltos directamente en /libros
+          else if (item.type === "file" && (item.name.endsWith(".pdf") || item.name.endsWith(".txt"))) {
+            promesasLibros.push(Promise.resolve({
+              titulo: item.name.replace(/\.(pdf|txt)$/i, "").replace(/[-_]/g, " "),
+              archivoUrl: item.download_url,
+              tipo: item.name.endsWith(".pdf") ? "pdf" : "txt",
+              portada: null
+            }));
+          }
+        }
+
+        const resultados = await Promise.all(promesasLibros);
+        listaLibros = resultados.filter(libro => libro !== null);
+
+        if (listaLibros.length === 0) {
+          statusEl.textContent = "No se encontraron libros en la carpeta '" + CARPETA_LIBROS + "'.";
+        } else {
+          statusEl.classList.add("hidden");
+          renderizarLibros(listaLibros);
+          renderizarDestacados(listaLibros.slice(0, 4));
+        }
+
+      } catch (error) {
+        console.error(error);
+        statusEl.innerHTML = `
+          <div class="bg-red-50 text-red-700 p-4 rounded-xl max-w-md mx-auto border border-red-200">
+            <p class="font-semibold">Falta configurar tu repositorio</p>
+            <p class="text-xs mt-1">Edita las variables <b>GITHUB_USER</b> y <b>GITHUB_REPO</b> en el código con tus datos reales de GitHub.</p>
+          </div>
+        `;
+      }
+    }
+
+    async function procesarCarpetaLibro(carpeta) {
+      try {
+        const res = await fetch(carpeta.url);
+        const archivos = await res.json();
+
+        // Buscar miniatura (miniatura.png, miniatura.jpg, miniatura.jpeg, miniatura.webp)
+        const imgFile = archivos.find(f => /^miniatura\.(png|jpg|jpeg|webp)$/i.test(f.name)) 
+                     || archivos.find(f => /\.(png|jpg|jpeg|webp)$/i.test(f.name));
+
+        // Buscar documento (.pdf o .txt)
+        const docFile = archivos.find(f => /\.(pdf|txt)$/i.test(f.name));
+
+        if (!docFile) return null;
+
+        return {
+          titulo: carpeta.name.replace(/[-_]/g, " "),
+          archivoUrl: docFile.download_url,
+          tipo: docFile.name.toLowerCase().endsWith(".pdf") ? "pdf" : "txt",
+          portada: imgFile ? imgFile.download_url : null
+        };
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function renderizarLibros(libros) {
+      const grid = document.getElementById("booksGrid");
+      const countEl = document.getElementById("bookCount");
+      countEl.textContent = `${libros.length} ${libros.length === 1 ? 'libro' : 'libros'}`;
+      grid.innerHTML = "";
+
+      libros.forEach((libro) => {
+        const card = document.createElement("div");
+        card.className = "book-card cursor-pointer group flex flex-col";
+        card.onclick = () => abrirLector(libro);
+
+        // Si tiene miniatura la muestra; si no, crea una portada elegante azul/negro
+        const portadaHTML = libro.portada 
+          ? `<img src="${libro.portada}" alt="${libro.titulo}" class="w-full h-full object-cover" />`
+          : `<div class="w-full h-full bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 p-4 flex flex-col justify-between text-white">
+               <span class="text-[10px] uppercase tracking-widest text-blue-400 font-semibold">${libro.tipo.toUpperCase()}</span>
+               <p class="font-bold text-sm leading-snug line-clamp-3">${libro.titulo}</p>
+               <span class="text-[10px] text-slate-400">Anderson autor</span>
+             </div>`;
+
+        card.innerHTML = `
+          <div class="book-cover aspect-[2/3] w-full rounded-lg overflow-hidden shadow-md border border-slate-200 bg-slate-100 transition-transform duration-200 relative">
+            ${portadaHTML}
+            <div class="absolute inset-0 bg-blue-900/0 group-hover:bg-blue-900/10 transition"></div>
+          </div>
+          <h3 class="mt-2.5 text-sm font-semibold text-slate-900 group-hover:text-blue-600 transition line-clamp-1">${libro.titulo}</h3>
+          <p class="text-xs text-slate-500 mt-0.5">Por Anderson autor</p>
+        `;
+
+        grid.appendChild(card);
+      });
+    }
+
+    function renderizarDestacados(libros) {
+      const list = document.getElementById("featuredList");
+      list.innerHTML = "";
+      libros.forEach(libro => {
+        const item = document.createElement("button");
+        item.className = "block text-left w-full hover:text-blue-600 transition truncate py-1 border-b border-slate-100 last:border-0";
+        item.textContent = "• " + libro.titulo;
+        item.onclick = () => abrirLector(libro);
+        list.appendChild(item);
+      });
+    }
+
+    function filtrarLibros(filtro) {
+      if (filtro === 'todos') {
+        renderizarLibros(listaLibros);
+      } else if (filtro === 'pdf') {
+        renderizarLibros(listaLibros.filter(b => b.tipo === 'pdf'));
+      } else {
+        renderizarLibros([...listaLibros].reverse());
+      }
+    }
+
+    // ==========================================
+    // 2. VISOR DE LECTURA DETALLADA
+    // ==========================================
+    async function abrirLector(libro) {
+      libroActual = libro;
+      const modal = document.getElementById("readerModal");
+      const titleEl = document.getElementById("modalTitle");
+      const pdfFrame = document.getElementById("pdfFrame");
+      const textViewer = document.getElementById("textViewer");
+      const downloadBtn = document.getElementById("downloadBtn");
+
+      titleEl.textContent = libro.titulo;
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+
+      if (libro.tipo === "pdf") {
+        textViewer.classList.add("hidden");
+        pdfFrame.classList.remove("hidden");
+        downloadBtn.classList.remove("hidden");
+        // Usamos Google Docs Viewer para asegurar que se vea bien en móviles y PC
+        pdfFrame.src = `https://docs.google.com/gview?url=${encodeURIComponent(libro.archivoUrl)}&embedded=true`;
+      } else {
+        pdfFrame.classList.add("hidden");
+        textViewer.classList.remove("hidden");
+        downloadBtn.classList.add("hidden");
+        textViewer.textContent = "Cargando texto...";
+        const res = await fetch(libro.archivoUrl);
+        textViewer.textContent = await res.text();
+      }
+    }
+
+    function cerrarLector() {
+      const modal = document.getElementById("readerModal");
+      const pdfFrame = document.getElementById("pdfFrame");
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+      pdfFrame.src = "";
+      libroActual = null;
+    }
+
+    // ==========================================
+    // 3. DESCARGA CON MARCA DE AGUA ("Anderson autor")
+    // ==========================================
+    async function descargarConMarcaDeAgua() {
+      if (!libroActual || libroActual.tipo !== "pdf") return;
+
+      const btnText = document.getElementById("downloadBtnText");
+      const originalText = btnText.textContent;
+      btnText.textContent = "Sellando PDF...";
+
+      try {
+        // 1. Descargar el PDF original desde GitHub
+        const existingPdfBytes = await fetch(libroActual.archivoUrl).then(res => res.arrayBuffer());
+
+        // 2. Cargar el PDF con pdf-lib
+        const { PDFDocument, rgb, degrees, StandardFonts } = PDFLib;
+        const pdfDoc = await PDFDocument.load(existingPdfBytes);
+        const helveticaFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+        const pages = pdfDoc.getPages();
+
+        // 3. Estampar "Anderson autor" en todas las páginas
+        pages.forEach(page => {
+          const { width, height } = page.getSize();
+          
+          // Marca de agua diagonal grande en el centro (sutil)
+          page.drawText(MARCA_DE_AGUA, {
+            x: width / 2 - 110,
+            y: height / 2 - 40,
+            size: 36,
+            font: helveticaFont,
+            color: rgb(0.15, 0.25, 0.45),
+            opacity: 0.14,
+            rotate: degrees(35),
+          });
+
+          // Sello pequeño en el pie de página
+          page.drawText(`© ${MARCA_DE_AGUA} - Biblioteca Digital`, {
+            x: 30,
+            y: 20,
+            size: 9,
+            font: helveticaFont,
+            color: rgb(0.3, 0.3, 0.3),
+            opacity: 0.6,
+          });
+        });
+
+        // 4. Generar el nuevo PDF y disparar la descarga
+        const pdfBytes = await pdfDoc.save();
+        const blob = new Blob([pdfBytes], { type: "application/pdf" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `${libroActual.titulo} - ${MARCA_DE_AGUA}.pdf`;
+        link.click();
+
+      } catch (err) {
+        console.error("Error al poner marca de agua:", err);
+        alert("Hubo un problema al procesar el PDF. Se abrirá el archivo original.");
+        window.open(libroActual.archivoUrl, "_blank");
+      } finally {
+        btnText.textContent = originalText;
+      }
+    }
+  </script>
+</body>
+</html>
