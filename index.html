@@ -4,11 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Biblioteca Digital</title>
-  <!-- Tailwind CSS para diseño moderno y limpio -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- pdf-lib para estampar la marca de agua al descargar -->
   <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-  <!-- Fuente Inter -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     body { font-family: 'Inter', sans-serif; }
@@ -19,17 +16,17 @@
 
   <!-- HEADER (Estilo Opción 2) -->
   <header class="bg-white border-b border-slate-200 sticky top-0 z-30">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
       <!-- Logo / Título -->
-      <div class="flex items-center gap-2.5">
+      <div class="flex items-center gap-2.5 shrink-0">
         <div class="w-8 h-8 bg-slate-900 text-white rounded-lg flex items-center justify-center font-bold text-lg">
           B
         </div>
-        <span class="font-bold text-lg tracking-tight text-slate-900 uppercase">Biblioteca Digital</span>
+        <span class="font-bold text-base sm:text-lg tracking-tight text-slate-900 uppercase">Biblioteca Digital</span>
       </div>
 
       <!-- Buscador -->
-      <div class="relative w-full max-w-md">
+      <div class="relative w-full max-w-sm hidden sm:block">
         <input 
           type="text" 
           id="searchInput" 
@@ -40,10 +37,33 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
         </svg>
       </div>
+
+      <!-- Interruptor de encendido/apagado de la biblioteca -->
+      <div class="flex items-center gap-2 shrink-0">
+        <span id="powerLabel" class="text-xs font-semibold text-emerald-700">Encendido</span>
+        <button 
+          id="powerToggle" 
+          onclick="alternarEncendido()" 
+          aria-label="Encender o apagar biblioteca"
+          class="w-11 h-6 bg-blue-600 rounded-full p-0.5 transition-colors duration-200 flex items-center cursor-pointer"
+        >
+          <span id="powerKnob" class="w-5 h-5 bg-white rounded-full shadow transform translate-x-5 transition-transform duration-200"></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Buscador en móvil -->
+    <div class="px-4 pb-3 sm:hidden">
+      <input 
+        type="text" 
+        id="searchInputMobile" 
+        placeholder="Buscar libro por título..." 
+        class="w-full bg-slate-100 border border-slate-200 text-sm rounded-lg px-4 py-2 focus:outline-none focus:bg-white focus:border-blue-600 transition"
+      />
     </div>
 
     <!-- Sub-navegación -->
-    <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex gap-6 text-sm font-medium text-slate-600 overflow-x-auto">
+    <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex gap-6 text-sm font-medium text-slate-600 overflow-x-auto border-t border-slate-100">
       <button onclick="filtrarLibros('todos')" class="py-2.5 border-b-2 border-blue-600 text-blue-600 whitespace-nowrap">Inicio</button>
       <button onclick="filtrarLibros('recientes')" class="py-2.5 border-b-2 border-transparent hover:text-slate-900 whitespace-nowrap">Novedades</button>
       <button onclick="filtrarLibros('populares')" class="py-2.5 border-b-2 border-transparent hover:text-slate-900 whitespace-nowrap">Más Leídos</button>
@@ -61,21 +81,15 @@
           <span id="bookCount" class="text-xs font-medium bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full">Cargando...</span>
         </div>
 
-        <!-- Estado de carga / Error -->
         <div id="statusMessage" class="text-center py-12 text-slate-500 text-sm">
           Conectando con el repositorio de GitHub...
         </div>
 
-        <!-- Grid de Libros -->
-        <div id="booksGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
-          <!-- Aquí se insertan los libros automáticamente -->
-        </div>
+        <div id="booksGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6"></div>
       </div>
 
-      <!-- COLUMNA DERECHA: Sidebar (Estilo Opción 2) -->
+      <!-- COLUMNA DERECHA: Sidebar -->
       <aside class="w-full lg:w-64 shrink-0 space-y-8 border-t lg:border-t-0 lg:border-l border-slate-200 pt-6 lg:pt-0 lg:pl-8">
-        
-        <!-- Categorías / Carpetas -->
         <div>
           <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wider mb-3">Categorías Populares</h2>
           <ul class="space-y-2 text-sm text-slate-600">
@@ -85,7 +99,6 @@
           </ul>
         </div>
 
-        <!-- Más Leídos -->
         <div>
           <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wider mb-3">Destacados</h2>
           <div id="featuredList" class="space-y-3 text-sm text-slate-600">
@@ -93,20 +106,17 @@
           </div>
         </div>
 
-        <!-- Info de Autoría -->
         <div class="bg-slate-900 text-white p-4 rounded-xl">
           <p class="text-xs uppercase tracking-wider text-blue-400 font-semibold mb-1">Archivo Oficial</p>
           <p class="text-sm font-medium">Biblioteca Digital</p>
-          <p class="text-xs text-slate-400 mt-2">Todos los ejemplares descargados incluyen sello de agua oficial.</p>
+          <p class="text-xs text-slate-400 mt-2">Marca de agua automática: Enderson Soto valoran.</p>
         </div>
-
       </aside>
     </div>
   </main>
 
   <!-- MODAL LECTOR DE LIBROS -->
   <div id="readerModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex-col">
-    <!-- Barra superior del lector -->
     <div class="bg-slate-900 text-white px-4 py-3 flex items-center justify-between border-b border-slate-800">
       <div class="flex items-center gap-3 truncate">
         <button onclick="cerrarLector()" class="p-1.5 hover:bg-slate-800 rounded-lg transition" title="Cerrar">
@@ -118,7 +128,6 @@
       </div>
 
       <div class="flex items-center gap-2 shrink-0">
-        <!-- Botón de descarga con marca de agua -->
         <button 
           id="downloadBtn"
           onclick="descargarConMarcaDeAgua()" 
@@ -132,7 +141,6 @@
       </div>
     </div>
 
-    <!-- Visor PDF / Contenido -->
     <div class="flex-1 bg-slate-800 relative flex items-center justify-center overflow-hidden">
       <iframe id="pdfFrame" class="w-full h-full border-0 hidden" src=""></iframe>
       <div id="textViewer" class="w-full max-w-3xl h-full bg-white text-slate-800 p-8 overflow-y-auto hidden leading-relaxed whitespace-pre-wrap font-serif text-lg"></div>
@@ -141,47 +149,94 @@
 
   <script>
     // ==========================================
-    // 1. CONFIGURA AQUÍ TU REPOSITORIO DE GITHUB
+    // 1. CONFIGURACIÓN PRINCIPAL
     // ==========================================
-    const GITHUB_USER = "TU_USUARIO_DE_GITHUB"; // Ejemplo: "andersondev"
-    const GITHUB_REPO = "TU_REPOSITORIO";       // Ejemplo: "mi-biblioteca"
-    const CARPETA_LIBROS = "libros";            // Nombre de la carpeta en tu repo
-    const MARCA_DE_AGUA = "Anderson autor";     // Texto de la marca de agua
+    const GITHUB_USER = "Enderson 211";
+    const GITHUB_REPO = "Biblioteca";
+    const CARPETA_LIBROS = "libros";
+    const MARCA_DE_AGUA = "Enderson Soto valoren";
 
-    // Variables globales
     let listaLibros = [];
     let libroActual = null;
+    let bibliotecaEncendida = true;
 
-    // Al cargar la página, consultamos la API de GitHub
     document.addEventListener("DOMContentLoaded", () => {
       cargarLibrosDesdeGitHub();
 
-      // Buscador en tiempo real
-      document.getElementById("searchInput").addEventListener("input", (e) => {
+      const manejarBusqueda = (e) => {
+        if (!bibliotecaEncendida) return;
         const texto = e.target.value.toLowerCase();
         const filtrados = listaLibros.filter(b => b.titulo.toLowerCase().includes(texto));
         renderizarLibros(filtrados);
-      });
+      };
+
+      document.getElementById("searchInput").addEventListener("input", manejarBusqueda);
+      document.getElementById("searchInputMobile").addEventListener("input", manejarBusqueda);
     });
 
+    function alternarEncendido() {
+      bibliotecaEncendida = !bibliotecaEncendida;
+
+      const toggle = document.getElementById("powerToggle");
+      const knob = document.getElementById("powerKnob");
+      const label = document.getElementById("powerLabel");
+      const grid = document.getElementById("booksGrid");
+      const statusEl = document.getElementById("statusMessage");
+      const countEl = document.getElementById("bookCount");
+      const featuredEl = document.getElementById("featuredList");
+
+      if (bibliotecaEncendida) {
+        toggle.classList.remove("bg-slate-300");
+        toggle.classList.add("bg-blue-600");
+        knob.classList.remove("translate-x-0");
+        knob.classList.add("translate-x-5");
+        label.textContent = "Encendido";
+        label.classList.remove("text-slate-500");
+        label.classList.add("text-emerald-700");
+
+        statusEl.classList.remove("hidden");
+        statusEl.textContent = "Conectando con el repositorio de GitHub...";
+        cargarLibrosDesdeGitHub();
+      } else {
+        cerrarLector();
+        toggle.classList.remove("bg-blue-600");
+        toggle.classList.add("bg-slate-300");
+        knob.classList.remove("translate-x-5");
+        knob.classList.add("translate-x-0");
+        label.textContent = "Apagado";
+        label.classList.remove("text-emerald-700");
+        label.classList.add("text-slate-500");
+
+        grid.innerHTML = "";
+        countEl.textContent = "Apagado";
+        featuredEl.innerHTML = `<p class="text-xs text-slate-400">Biblioteca apagada.</p>`;
+        statusEl.classList.remove("hidden");
+        statusEl.innerHTML = `
+          <div class="bg-slate-100 text-slate-600 p-5 rounded-xl max-w-md mx-auto border border-slate-200">
+            <p class="font-semibold text-slate-800">La biblioteca está apagada</p>
+            <p class="text-xs mt-1">Activa el interruptor superior para cargar los libros desde GitHub.</p>
+          </div>
+        `;
+      }
+    }
+
     async function cargarLibrosDesdeGitHub() {
+      if (!bibliotecaEncendida) return;
+
       const statusEl = document.getElementById("statusMessage");
       const apiUrl = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${CARPETA_LIBROS}`;
 
       try {
         const res = await fetch(apiUrl);
-        if (!res.ok) throw new Error("No se pudo conectar con el repositorio. Revisa el usuario, el repo y que sea público.");
-        
+        if (!res.ok) throw new Error("Error de conexión con GitHub");
+
         const items = await res.json();
         const promesasLibros = [];
 
         for (const item of items) {
-          // Caso A: Subcarpeta por cada libro (contiene miniatura.jpg/png y archivo.pdf)
           if (item.type === "dir") {
             promesasLibros.push(procesarCarpetaLibro(item));
-          } 
-          // Caso B: Archivos sueltos directamente en /libros
-          else if (item.type === "file" && (item.name.endsWith(".pdf") || item.name.endsWith(".txt"))) {
+          } else if (item.type === "file" && (item.name.endsWith(".pdf") || item.name.endsWith(".txt"))) {
             promesasLibros.push(Promise.resolve({
               titulo: item.name.replace(/\.(pdf|txt)$/i, "").replace(/[-_]/g, " "),
               archivoUrl: item.download_url,
@@ -194,6 +249,8 @@
         const resultados = await Promise.all(promesasLibros);
         listaLibros = resultados.filter(libro => libro !== null);
 
+        if (!bibliotecaEncendida) return;
+
         if (listaLibros.length === 0) {
           statusEl.textContent = "No se encontraron libros en la carpeta '" + CARPETA_LIBROS + "'.";
         } else {
@@ -201,9 +258,8 @@
           renderizarLibros(listaLibros);
           renderizarDestacados(listaLibros.slice(0, 4));
         }
-
       } catch (error) {
-        console.error(error);
+        if (!bibliotecaEncendida) return;
         statusEl.innerHTML = `
           <div class="bg-red-50 text-red-700 p-4 rounded-xl max-w-md mx-auto border border-red-200">
             <p class="font-semibold">Falta configurar tu repositorio</p>
@@ -218,11 +274,8 @@
         const res = await fetch(carpeta.url);
         const archivos = await res.json();
 
-        // Buscar miniatura (miniatura.png, miniatura.jpg, miniatura.jpeg, miniatura.webp)
-        const imgFile = archivos.find(f => /^miniatura\.(png|jpg|jpeg|webp)$/i.test(f.name)) 
+        const imgFile = archivos.find(f => /^miniatura\.(png|jpg|jpeg|webp)$/i.test(f.name))
                      || archivos.find(f => /\.(png|jpg|jpeg|webp)$/i.test(f.name));
-
-        // Buscar documento (.pdf o .txt)
         const docFile = archivos.find(f => /\.(pdf|txt)$/i.test(f.name));
 
         if (!docFile) return null;
@@ -239,6 +292,8 @@
     }
 
     function renderizarLibros(libros) {
+      if (!bibliotecaEncendida) return;
+
       const grid = document.getElementById("booksGrid");
       const countEl = document.getElementById("bookCount");
       countEl.textContent = `${libros.length} ${libros.length === 1 ? 'libro' : 'libros'}`;
@@ -249,13 +304,12 @@
         card.className = "book-card cursor-pointer group flex flex-col";
         card.onclick = () => abrirLector(libro);
 
-        // Si tiene miniatura la muestra; si no, crea una portada elegante azul/negro
-        const portadaHTML = libro.portada 
+        const portadaHTML = libro.portada
           ? `<img src="${libro.portada}" alt="${libro.titulo}" class="w-full h-full object-cover" />`
           : `<div class="w-full h-full bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 p-4 flex flex-col justify-between text-white">
                <span class="text-[10px] uppercase tracking-widest text-blue-400 font-semibold">${libro.tipo.toUpperCase()}</span>
                <p class="font-bold text-sm leading-snug line-clamp-3">${libro.titulo}</p>
-               <span class="text-[10px] text-slate-400">Anderson autor</span>
+               <span class="text-[10px] text-slate-400">${MARCA_DE_AGUA}</span>
              </div>`;
 
         card.innerHTML = `
@@ -264,7 +318,7 @@
             <div class="absolute inset-0 bg-blue-900/0 group-hover:bg-blue-900/10 transition"></div>
           </div>
           <h3 class="mt-2.5 text-sm font-semibold text-slate-900 group-hover:text-blue-600 transition line-clamp-1">${libro.titulo}</h3>
-          <p class="text-xs text-slate-500 mt-0.5">Por Anderson autor</p>
+          <p class="text-xs text-slate-500 mt-0.5">${MARCA_DE_AGUA}</p>
         `;
 
         grid.appendChild(card);
@@ -272,6 +326,7 @@
     }
 
     function renderizarDestacados(libros) {
+      if (!bibliotecaEncendida) return;
       const list = document.getElementById("featuredList");
       list.innerHTML = "";
       libros.forEach(libro => {
@@ -284,6 +339,7 @@
     }
 
     function filtrarLibros(filtro) {
+      if (!bibliotecaEncendida) return;
       if (filtro === 'todos') {
         renderizarLibros(listaLibros);
       } else if (filtro === 'pdf') {
@@ -293,10 +349,8 @@
       }
     }
 
-    // ==========================================
-    // 2. VISOR DE LECTURA DETALLADA
-    // ==========================================
     async function abrirLector(libro) {
+      if (!bibliotecaEncendida) return;
       libroActual = libro;
       const modal = document.getElementById("readerModal");
       const titleEl = document.getElementById("modalTitle");
@@ -312,7 +366,6 @@
         textViewer.classList.add("hidden");
         pdfFrame.classList.remove("hidden");
         downloadBtn.classList.remove("hidden");
-        // Usamos Google Docs Viewer para asegurar que se vea bien en móviles y PC
         pdfFrame.src = `https://docs.google.com/gview?url=${encodeURIComponent(libro.archivoUrl)}&embedded=true`;
       } else {
         pdfFrame.classList.add("hidden");
@@ -333,9 +386,6 @@
       libroActual = null;
     }
 
-    // ==========================================
-    // 3. DESCARGA CON MARCA DE AGUA ("Anderson autor")
-    // ==========================================
     async function descargarConMarcaDeAgua() {
       if (!libroActual || libroActual.tipo !== "pdf") return;
 
@@ -344,32 +394,26 @@
       btnText.textContent = "Sellando PDF...";
 
       try {
-        // 1. Descargar el PDF original desde GitHub
         const existingPdfBytes = await fetch(libroActual.archivoUrl).then(res => res.arrayBuffer());
-
-        // 2. Cargar el PDF con pdf-lib
         const { PDFDocument, rgb, degrees, StandardFonts } = PDFLib;
         const pdfDoc = await PDFDocument.load(existingPdfBytes);
         const helveticaFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
         const pages = pdfDoc.getPages();
 
-        // 3. Estampar "Anderson autor" en todas las páginas
         pages.forEach(page => {
           const { width, height } = page.getSize();
-          
-          // Marca de agua diagonal grande en el centro (sutil)
+
           page.drawText(MARCA_DE_AGUA, {
-            x: width / 2 - 110,
-            y: height / 2 - 40,
-            size: 36,
+            x: width / 2 - 140,
+            y: height / 2 - 35,
+            size: 32,
             font: helveticaFont,
             color: rgb(0.15, 0.25, 0.45),
             opacity: 0.14,
             rotate: degrees(35),
           });
 
-          // Sello pequeño en el pie de página
-          page.drawText(`© ${MARCA_DE_AGUA} - Biblioteca Digital`, {
+          page.drawText(`© ${MARCA_DE_AGUA}`, {
             x: 30,
             y: 20,
             size: 9,
@@ -379,14 +423,12 @@
           });
         });
 
-        // 4. Generar el nuevo PDF y disparar la descarga
         const pdfBytes = await pdfDoc.save();
         const blob = new Blob([pdfBytes], { type: "application/pdf" });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
         link.download = `${libroActual.titulo} - ${MARCA_DE_AGUA}.pdf`;
         link.click();
-
       } catch (err) {
         console.error("Error al poner marca de agua:", err);
         alert("Hubo un problema al procesar el PDF. Se abrirá el archivo original.");
@@ -397,4 +439,5 @@
     }
   </script>
 </body>
-</html>
+  </html>
+        
